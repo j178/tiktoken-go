@@ -1,4 +1,4 @@
-package tokenizer
+package tiktoken
 
 // Package tokenizer provides functions for encoding and decoding text using
 // different tokenization schemes.
@@ -75,7 +75,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/tiktoken-go/tokenizer/codec"
+	"github.com/j178/tiktoken-go/codec"
 )
 
 var (

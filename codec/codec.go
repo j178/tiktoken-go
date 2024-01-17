@@ -99,7 +99,7 @@ type part struct {
 
 var partPool = sync.Pool{
 	New: func() any {
-		return make([]part, 0, 16)
+		return make([]part, 0, 128)
 	},
 }
 
@@ -109,7 +109,11 @@ func (c *Codec) bpe(piece []byte) ([]uint, []string) {
 		parts = make([]part, len(piece)+1)
 	}
 	parts = parts[:len(piece)+1]
-	defer partPool.Put(parts)
+	defer func() {
+		if cap(parts) <= 1024 {
+			partPool.Put(parts)
+		}
+	}()
 
 	for i := 0; i < len(parts); i++ {
 		parts[i] = part{i, math.MaxUint}

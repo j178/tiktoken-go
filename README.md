@@ -1,6 +1,9 @@
-![Tests](https://github.com/tiktoken-go/tokenizer/actions/workflows/go.yml/badge.svg)
+![Tests](https://github.com/j178/tiktoken-go/actions/workflows/go.yml/badge.svg)
 
-# Tokenizer
+# tiktoken-go
+
+> [!NOTE]
+> This is a fork of [tiktoken-go/tokenizer](https://github.com/tiktoken-go/tokenizer) with some API changes.
 
 This is a pure go port of OpenAI's tokenizer.
 
@@ -12,23 +15,24 @@ This is a pure go port of OpenAI's tokenizer.
 package main
 
 import (
-    "fmt"
-    "github.com/tiktoken-go/tokenizer"
+	"fmt"
+
+	"github.com/j178/tiktoken-go"
 )
 
 func main() {
-    enc, err := tokenizer.Get(tokenizer.Cl100kBase)
-    if err != nil {
-        panic("oh oh")
-    }
+	enc, err := tiktoken.Get(tiktoken.Cl100kBase)
+	if err != nil {
+		panic("oh oh")
+	}
 
-    // this should print a list of token ids
-    ids, _, _ := enc.Encode("supercalifragilistic")
-    fmt.Println(ids)
+	// this should print a list of token ids
+	ids, _, _ := enc.Encode("supercalifragilistic")
+	fmt.Println(ids)
 
-    // this should print the original string back
-    text, _ := enc.Decode(ids)
-    fmt.Println(text)
+	// this should print the original string back
+	text, _ := enc.Decode(ids)
+	fmt.Println(text)
 }
 ```
 
@@ -76,5 +80,3 @@ Here is a list of other libraries that do something similar.
 - [https://github.com/sugarme/tokenizer](https://github.com/sugarme/tokenizer) (A different tokenizer algorithm than OpenAI's)
 - [https://github.com/pandodao/tokenizer-go](https://github.com/pandodao/tokenizer-go) (deprecated, calls into JavaScript)
 - [https://github.com/pkoukk/tiktoken-go](https://github.com/pkoukk/tiktoken-go)
-
-
