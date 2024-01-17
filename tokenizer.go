@@ -53,11 +53,11 @@ package tiktoken
 //
 //	import (
 //		"fmt"
-//		"github.com/tiktoken-go/tokenizer"
+//		"github.com/j178/tiktoken-go"
 //	)
 //
 //	func main() {
-//		enc, err := tokenizer.Get(tokenizer.Cl100kBase)
+//		enc, err := tiktoken.Get(tiktoken.Cl100kBase)
 //		if err != nil {
 //			panic("oh oh")
 //		}
@@ -74,6 +74,7 @@ package tiktoken
 import (
 	"errors"
 	"strings"
+	"sync"
 
 	"github.com/j178/tiktoken-go/codec"
 )
@@ -198,9 +199,24 @@ func EncodingForModel(model string) (Encoding, error) {
 // specified OpenAI model. If the specified model is not supported, an error
 // is returned.
 func ForModel(model string) (Codec, error) {
+	mu.Lock()
+	defer mu.Unlock()
+	if c, ok := codecCache[model]; ok {
+		return c, nil
+	}
 	enc, err := EncodingForModel(model)
 	if err != nil {
 		return nil, err
 	}
-	return Get(enc)
+	c, err := Get(enc)
+	if err != nil {
+		return nil, err
+	}
+	codecCache[model] = c
+	return c, nil
 }
+
+var (
+	codecCache = make(map[string]Codec)
+	mu         sync.Mutex
+)
