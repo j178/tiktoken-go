@@ -3,6 +3,7 @@ package codec
 import (
 	"fmt"
 	"math"
+	"sync"
 
 	"github.com/dlclark/regexp2"
 )
@@ -48,6 +49,30 @@ func (c *Codec) Encode(input string) ([]uint, []string, error) {
 	return ids, tokens, nil
 }
 
+func (c *Codec) Count(input string) (int, error) {
+	var count int
+	match, err := c.splitRegexp.FindStringMatch(input)
+	if err != nil {
+		return 0, fmt.Errorf("error matching: %v", err)
+	}
+
+	for match != nil {
+		piece := match.String()
+		if _, ok := c.vocabulary[piece]; ok {
+			count++
+		} else {
+			_, newTokens := c.bpe([]byte(piece))
+			count += len(newTokens)
+		}
+		m, err := c.splitRegexp.FindNextMatch(match)
+		if err != nil {
+			return 0, fmt.Errorf("error matching: %v", err)
+		}
+		match = m
+	}
+	return count, nil
+}
+
 func (c *Codec) Decode(tokens []uint) (string, error) {
 	if c.reverseVocabulary == nil {
 		c.reverseVocabulary = make(map[uint]string)
@@ -67,13 +92,25 @@ func (c *Codec) Decode(tokens []uint) (string, error) {
 	return out, nil
 }
 
-func (c *Codec) bpe(piece []byte) ([]uint, []string) {
-	type part struct {
-		offset int
-		rank   uint
-	}
+type part struct {
+	offset int
+	rank   uint
+}
 
-	parts := make([]part, len(piece)+1)
+var partPool = sync.Pool{
+	New: func() any {
+		return make([]part, 0, 16)
+	},
+}
+
+func (c *Codec) bpe(piece []byte) ([]uint, []string) {
+	parts := partPool.Get().([]part)
+	if cap(parts) < len(piece)+1 {
+		parts = make([]part, len(piece)+1)
+	}
+	parts = parts[:len(piece)+1]
+	defer partPool.Put(parts)
+
 	for i := 0; i < len(parts); i++ {
 		parts[i] = part{i, math.MaxUint}
 	}
